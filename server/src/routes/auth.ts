@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { getDB } from '../db';
  
 const router = Router();
-const SECRET = process.env.JWT_SECRET || 'dev_secret';
+
  
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
@@ -25,7 +25,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     });
  
     const userId = Number(result.lastInsertRowid);
-    const token = jwt.sign({ userId }, SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
  
     res.status(201).json({ token, user: { id: userId, name, email } });
   } catch (err: any) {
@@ -65,7 +65,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
  
-    const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: Number(user.id) }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch {
     res.status(500).json({ error: 'Server error' });
