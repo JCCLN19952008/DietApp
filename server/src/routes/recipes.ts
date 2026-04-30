@@ -54,4 +54,38 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.post('/', requireAuth, async (req: Request, res: Response) => {
+  const { title, description, ingredients, instructions, prep_time_minutes, tags } = req.body;
+
+  if (!title || !ingredients || !instructions) {
+    res.status(400).json({ error: 'Title, ingredients and instructions are required' });
+    return;
+  }
+
+  try {
+    const db = getDB();
+    const result = await db.execute({
+      sql: `INSERT INTO recipes (title, description, ingredients, instructions, prep_time_minutes, tags)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [
+        title,
+        description || null,
+        typeof ingredients === 'string' ? ingredients : JSON.stringify(ingredients),
+        instructions,
+        prep_time_minutes || null,
+        tags || null,
+      ],
+    });
+
+    const inserted = await db.execute({
+      sql: 'SELECT * FROM recipes WHERE id = ?',
+      args: [result.lastInsertRowid!],
+    });
+
+    res.status(201).json(inserted.rows[0]);
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

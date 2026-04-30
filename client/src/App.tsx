@@ -7,9 +7,8 @@ import Register      from './pages/Register';
 import Dashboard     from './pages/Dashboard';
 import Recipes       from './pages/Recipes';
 import RecipeDetail  from './pages/RecipeDetail';
-
-// Day 5+
-// import Suggest from './pages/Suggest';
+import Suggest       from './pages/Suggest';
+import StatusPage from './pages/Status';
 
 function App() {
   return (
@@ -23,10 +22,8 @@ function App() {
           <Route path="/dashboard"   element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/recipes"     element={<PrivateRoute><Recipes /></PrivateRoute>} />
           <Route path="/recipes/:id" element={<PrivateRoute><RecipeDetail /></PrivateRoute>} />
-
-          {/* Day 5+ */}
-          {/* <Route path="/suggest" element={<PrivateRoute><Suggest /></PrivateRoute>} /> */}
-
+          <Route path="/suggest"     element={<PrivateRoute><Suggest /></PrivateRoute>} />
+          <Route path="/status" element={<StatusPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

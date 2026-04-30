@@ -1,24 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 type Status = 'checking' | 'ok' | 'error';
 
-export default function Home() {
-  const { token } = useAuth();
-  const navigate = useNavigate();
+export default function StatusPage() {
   const [status, setStatus] = useState<Status>('checking');
 
   useEffect(() => {
-    if (token) {
-      navigate('/dashboard', { replace: true });
-      return;
-    }
     fetch('/api/ping')
       .then(res => res.json())
       .then(() => setStatus('ok'))
       .catch(() => setStatus('error'));
-  }, [token, navigate]);
+  }, []);
 
   const dot: Record<Status, string> = {
     checking: 'bg-yellow-400 animate-pulse',
@@ -28,8 +20,8 @@ export default function Home() {
 
   const label: Record<Status, string> = {
     checking: 'Connecting to API…',
-    ok:       'Claude API-enabled',
-    error:    'API unreachable — is Claude doing antything?',
+    ok:       'API connected',
+    error:    'API unreachable — is the server running?',
   };
 
   return (
@@ -39,29 +31,11 @@ export default function Home() {
         <h1 className="text-3xl font-semibold text-white tracking-tight">
           Dietetics App
         </h1>
-        <p className="mt-2 text-gray-400 text-sm">
-          Track meals, browse recipes, and get AI suggestions
-        </p>
+        <p className="mt-2 text-gray-400 text-sm">API Status Check</p>
       </div>
-
       <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-full px-4 py-2 text-sm">
         <span className={`w-2 h-2 rounded-full ${dot[status]}`} />
         <span className="text-gray-300">{label[status]}</span>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          onClick={() => navigate('/login')}
-          className="px-5 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          Log in
-        </button>
-        <button
-          onClick={() => navigate('/register')}
-          className="px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-500 transition-colors"
-        >
-          Register
-        </button>
       </div>
     </div>
   );
