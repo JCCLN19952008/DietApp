@@ -3,9 +3,7 @@
 //   const data = await api.get<User[]>('/users');
 //   const user = await api.post<User>('/auth/login', { email, password });
 
-const BASE = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}/api` 
-  : 'https://dietapp-production.up.railway.app/api';
+const BASE = (import.meta.env.VITE_API_URL || 'https://dietapp-production.up.railway.app') + '/api';
 
 function getToken(): string | null {
   return localStorage.getItem('token');
