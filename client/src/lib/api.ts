@@ -3,6 +3,7 @@
 //   const data = await api.get<User[]>('/users');
 //   const user = await api.post<User>('/auth/login', { email, password });
 
+// Production API URL
 const BASE = (import.meta.env.VITE_API_URL || 'https://dietapp-production.up.railway.app') + '/api';
 
 function getToken(): string | null {
