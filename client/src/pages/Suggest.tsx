@@ -9,6 +9,7 @@ interface Suggestion {
   instructions: string;
   prep_time_minutes: number;
   nutritional_highlights: string;
+  tags: string;
 }
 
 const PREP_TIMES = [
@@ -73,16 +74,16 @@ export default function Suggest() {
   async function handleSave(suggestion: Suggestion, index: number) {
     try {
       await api.post('/recipes', {
-        title: suggestion.title,
-        description: suggestion.description,
-        ingredients: JSON.stringify(suggestion.ingredients),
-        instructions: suggestion.instructions,
-        prep_time_minutes: suggestion.prep_time_minutes,
-        tags: 'ai-suggested',
-      });
-      setSavedIds(prev => [...prev, index]);
-    } catch {
-      // silently fail
+      title: suggestion.title,
+      description: suggestion.description,
+      ingredients: JSON.stringify(suggestion.ingredients),
+      instructions: suggestion.instructions,
+      prep_time_minutes: suggestion.prep_time_minutes,
+      tags: suggestion.tags ? `ai-suggested,${suggestion.tags}` : 'ai-suggested',
+    });
+    setSavedIds(prev => [...prev, index]);
+  } catch {
+    // silently fail
     }
   }
 

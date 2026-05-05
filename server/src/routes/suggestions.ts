@@ -17,9 +17,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
   }
 
   try {
-       
-       
-       const prompt = `You are a helpful dietitian assistant. Based on the following ingredients and available prep time, suggest 2 recipe ideas. For each recipe, provide a title, brief description, the full list of ingredients needed, step-by-step instructions, and any nutritional highlights.
+       const prompt = `You are a helpful dietitian assistant. Based on the following ingredients and available prep time, suggest 2 recipe ideas. For each recipe, provide a title, brief description, the full list of ingredients needed, step-by-step instructions, nutritional highlights, and relevant tags.
 
 Available ingredients: ${ingredients.join(', ')}
 Available prep time: ${prep_time || 30} minutes
@@ -32,9 +30,14 @@ Respond ONLY with a valid JSON array, no markdown, no backticks, no extra text. 
     "ingredients": ["ingredient 1", "ingredient 2"],
     "instructions": "Step by step instructions as a single string",
     "prep_time_minutes": 20,
-    "nutritional_highlights": "High protein, rich in fibre"
+    "nutritional_highlights": "High protein, rich in fibre",
+    "tags": "quick,high-protein,gluten-free"
   }
-]`;
+]
+
+For tags, only use relevant ones from this list: quick, vegan, vegetarian, high-protein, gluten-free, breakfast, meal-prep, no-cook, high-fibre, omega-3`;
+       
+       
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
