@@ -1,23 +1,30 @@
 import { createClient, Client } from '@libsql/client';
-import path from 'path';
-import fs from 'fs';
- 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const DB_PATH  = `file:${path.join(DATA_DIR, 'dietetics.db')}`;
- 
+
 let client: Client;
- 
+
 export function getDB(): Client {
   if (!client) {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    client = createClient({ url: DB_PATH });
+    const url = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+
+    if (url && authToken) {
+      // Production — use Turso cloud database
+      client = createClient({ url, authToken });
+    } else {
+      // Local development — use local SQLite file
+      const path = require('path');
+      const fs = require('fs');
+      const DATA_DIR = path.join(__dirname, '..', 'data');
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+      client = createClient({ url: `file:${path.join(DATA_DIR, 'dietetics.db')}` });
+    }
   }
   return client;
 }
- 
+
 export async function initDB(): Promise<void> {
   const db = getDB();
- 
+
   await db.executeMultiple(`
     CREATE TABLE IF NOT EXISTS users (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +33,7 @@ export async function initDB(): Promise<void> {
       name          TEXT    NOT NULL,
       created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
     );
- 
+
     CREATE TABLE IF NOT EXISTS foods (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
       name              TEXT NOT NULL,
@@ -36,7 +43,7 @@ export async function initDB(): Promise<void> {
       fat_g             REAL,
       created_at        DATETIME DEFAULT CURRENT_TIMESTAMP
     );
- 
+
     CREATE TABLE IF NOT EXISTS meal_logs (
       id               INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -47,7 +54,7 @@ export async function initDB(): Promise<void> {
       logged_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
       notes            TEXT
     );
- 
+
     CREATE TABLE IF NOT EXISTS recipes (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
       title             TEXT NOT NULL,
@@ -59,16 +66,16 @@ export async function initDB(): Promise<void> {
       created_at        DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
- 
+
   await seedRecipes(db);
- 
-  console.log('✓ Database ready at', DB_PATH);
+
+  console.log('✓ Database ready');
 }
- 
+
 async function seedRecipes(db: Client): Promise<void> {
   const existing = await db.execute({ sql: 'SELECT COUNT(*) as count FROM recipes', args: [] });
   if ((existing.rows[0].count as number) > 0) return;
- 
+
   const recipes = [
     {
       title: 'Greek Salad',
@@ -151,7 +158,7 @@ async function seedRecipes(db: Client): Promise<void> {
       tags: 'breakfast,vegetarian,quick,high-protein,gluten-free',
     },
   ];
- 
+
   for (const recipe of recipes) {
     await db.execute({
       sql: `INSERT INTO recipes (title, description, ingredients, instructions, prep_time_minutes, tags)
@@ -159,6 +166,6 @@ async function seedRecipes(db: Client): Promise<void> {
       args: [recipe.title, recipe.description, recipe.ingredients, recipe.instructions, recipe.prep_time_minutes, recipe.tags],
     });
   }
- 
+
   console.log('✓ Recipes seeded');
 }
