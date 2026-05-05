@@ -1,22 +1,19 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { initDB } from './db';
 import routes from './routes';
- 
+
 dotenv.config();
 
- 
 const app = express();
 const PORT = process.env.PORT || 3001;
- 
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (
-      origin.endsWith('.vercel.app') ||
-      origin === 'http://localhost:5173'
-    ) {
+    if (origin.endsWith('.railway.app') || origin === 'http://localhost:5173') {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -25,18 +22,18 @@ app.use(cors({
 }));
 
 app.use(express.json());
- 
 app.use('/api', routes);
- 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+
+// Serve React frontend in production
+const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
+app.use(express.static(clientDist));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
 });
- 
+
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`\n🥗  Dietetics API running → http://localhost:${PORT}`);
-    console.log(`    Health:  http://localhost:${PORT}/health`);
-    console.log(`    Ping:    http://localhost:${PORT}/api/ping\n`);
   });
 }).catch(err => {
   console.error('Failed to initialise database:', err);
