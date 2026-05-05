@@ -26,6 +26,7 @@ export default function Suggest() {
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [savedIds, setSavedIds]       = useState<number[]>([]);
 
   function addIngredient() {
     const trimmed = input.trim().toLowerCase();
@@ -55,6 +56,7 @@ export default function Suggest() {
     setError('');
     setLoading(true);
     setSuggestions([]);
+    setSavedIds([]);
     try {
       const data = await api.post<{ suggestions: Suggestion[] }>('/suggestions', {
         ingredients,
@@ -65,6 +67,22 @@ export default function Suggest() {
       setError(err.message || 'Failed to get suggestions');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSave(suggestion: Suggestion, index: number) {
+    try {
+      await api.post('/recipes', {
+        title: suggestion.title,
+        description: suggestion.description,
+        ingredients: JSON.stringify(suggestion.ingredients),
+        instructions: suggestion.instructions,
+        prep_time_minutes: suggestion.prep_time_minutes,
+        tags: 'ai-suggested',
+      });
+      setSavedIds(prev => [...prev, index]);
+    } catch {
+      // silently fail
     }
   }
 
@@ -167,9 +185,20 @@ export default function Suggest() {
                     <h3 className="text-sm font-semibold text-gray-100">{s.title}</h3>
                     <p className="text-xs text-gray-400 mt-1">{s.description}</p>
                   </div>
-                  <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
-                    {s.prep_time_minutes} min
-                  </span>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-xs text-gray-500">{s.prep_time_minutes} min</span>
+                    <button
+                      onClick={() => handleSave(s, i)}
+                      disabled={savedIds.includes(i)}
+                      className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                        savedIds.includes(i)
+                          ? 'bg-green-900 text-green-400 border border-green-700 cursor-default'
+                          : 'bg-gray-700 text-gray-300 hover:bg-green-700 hover:text-white border border-gray-600'
+                      }`}
+                    >
+                      {savedIds.includes(i) ? '✓ Saved' : '+ Save'}
+                    </button>
+                  </div>
                 </div>
 
                 {s.nutritional_highlights && (
